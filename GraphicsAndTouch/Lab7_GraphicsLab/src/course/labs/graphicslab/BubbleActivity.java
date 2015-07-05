@@ -84,15 +84,21 @@ public class BubbleActivity extends Activity {
 				/ mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
 		// TODO - make a new SoundPool, allowing up to 10 streams 
-		mSoundPool = null;
-
+		mSoundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
 
 		// TODO - set a SoundPool OnLoadCompletedListener that calls setupGestureDetector()
+        mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                if (0 == status) {
+                    setupGestureDetector();
+                }
+            }
+        });
 
-
-		
 		// TODO - load the sound from res/raw/bubble_pop.wav
-		mSoundID = 0;
+		mSoundID = mSoundPool.load(this, R.raw.bubble_pop, 1);
+
 
 	}
 
@@ -126,12 +132,21 @@ public class BubbleActivity extends Activity {
 				// You can get all Views in mFrame using the
 				// ViewGroup.getChildCount() method
 
+                //int pointerIndex = event1.getActionIndex();
+                //int pointerId = event1.getPointerId(pointerIndex);
+                float fingerX = event1.getX();
+                float fingerY = event1.getY();
 
-				
-				
-				
-				return false;
+                int childNum = mFrame.getChildCount();
+                for (int i = 0; i < childNum; ++i) {
+                    BubbleView b = (BubbleView)mFrame.getChildAt(i);
+                    if (b.intersects(fingerX, fingerY)) {
+                        Log.d(TAG, "Filng on bubble.");
+                        // TODO do something
+                    }
+                }
 
+				return true;
 			}
 
 			// If a single tap intersects a BubbleView, then pop the BubbleView
@@ -144,20 +159,27 @@ public class BubbleActivity extends Activity {
 				// TODO - Implement onSingleTapConfirmed actions.
 				// You can get all Views in mFrame using the
 				// ViewGroup.getChildCount() method
+                float fingerX = event.getX();
+                float fingerY = event.getY();
+                boolean createNew = true;
 
+                int childNum = mFrame.getChildCount();
+                for (int i = 0; i < childNum; ++i) {
+                    BubbleView b = (BubbleView)mFrame.getChildAt(i);
+                    if (b.intersects(fingerX, fingerY)) {
+                        Log.d(TAG, "Touch on bubble.");
+                        createNew = false;
+                        mFrame.removeViewAt(i);
+                    }
+                }
 
+                if (createNew) {
+                    BubbleView b = new BubbleView(getApplicationContext(), fingerX, fingerY);
+                    mFrame.addView(b);
+                }
 
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				return false;
+				return true;
 			}
 		});
 	}
@@ -166,25 +188,21 @@ public class BubbleActivity extends Activity {
 	public boolean onTouchEvent(MotionEvent event) {
 
 		// TODO - Delegate the touch to the gestureDetector
-
-		
-		
-		
-		
-		
-		
-		return false;
-	
+        return mGestureDetector.onTouchEvent(event);
 	}
 
 	@Override
 	protected void onPause() {
 		
 		// TODO - Release all SoundPool resources
+        if (null != mSoundPool) {
+            mSoundPool.unload(mSoundID);
+            mSoundPool.release();
+            mSoundPool = null;
+        }
 
-
-
-
+        mAudioManager.setSpeakerphoneOn(false);
+        mAudioManager.unloadSoundEffects();
 
 		super.onPause();
 	}
@@ -239,12 +257,9 @@ public class BubbleActivity extends Activity {
 			if (speedMode == RANDOM) {
 				
 				// TODO - set rotation in range [1..3]
-				mDRotate = 0;
-
-
+				mDRotate = r.nextLong()*2 + 1;
 			} else {
 				mDRotate = 0;
-			
 			}
 		}
 
@@ -271,14 +286,8 @@ public class BubbleActivity extends Activity {
 				// TODO - Set movement direction and speed
 				// Limit movement speed in the x and y
 				// direction to [-3..3] pixels per movement.
-
-
-			
-			
-			
-			
-			
-
+                mDx = r.nextLong()*6 - 3;
+                mDy = r.nextLong()*6 - 3;
 			}
 		}
 
@@ -289,12 +298,12 @@ public class BubbleActivity extends Activity {
 			
 			} else {
 				//TODO - set scaled bitmap size in range [1..3] * BITMAP_SIZE
-				mScaledBitmapWidth = 0;
-			
+				mScaledBitmapWidth = BITMAP_SIZE * (r.nextInt(2) + 1);
 			}
 
 			// TODO - create the scaled bitmap using size set above
-			mScaledBitmap = null;
+            Bitmap origin = BitmapFactory.decodeResource(getResources(), R.drawable.b64);
+			mScaledBitmap = Bitmap.createScaledBitmap(origin, mScaledBitmapWidth, mScaledBitmapWidth, false);
 		}
 
 		// Start moving the BubbleView & updating the display
@@ -331,14 +340,12 @@ public class BubbleActivity extends Activity {
 		private synchronized boolean intersects(float x, float y) {
 
 			// TODO - Return true if the BubbleView intersects position (x,y)
-
-
-
-
-			
-			
-			
-		    return false;
+            float distSquared = (x - mXPos) * (x - mXPos) + (y - mYPos) * (y - mYPos);
+            if (distSquared < mRadiusSquared) {
+                return true;
+            } else {
+                return false;
+            }
 		}
 
 		// Cancel the Bubble's movement
