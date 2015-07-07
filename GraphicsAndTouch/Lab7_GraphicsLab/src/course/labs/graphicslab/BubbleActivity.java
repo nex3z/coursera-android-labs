@@ -14,7 +14,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -307,8 +306,7 @@ public class BubbleActivity extends Activity {
             }
 
             // TODO - create the scaled bitmap using size set above
-            Bitmap origin = BitmapFactory.decodeResource(getResources(), R.drawable.b64);
-            mScaledBitmap = Bitmap.createScaledBitmap(origin, mScaledBitmapWidth, mScaledBitmapWidth, false);
+            mScaledBitmap = Bitmap.createScaledBitmap(mBitmap, mScaledBitmapWidth, mScaledBitmapWidth, false);
         }
 
         // Start moving the BubbleView & updating the display
@@ -344,13 +342,8 @@ public class BubbleActivity extends Activity {
         private synchronized boolean intersects(float x, float y) {
 
             // TODO - Return true if the BubbleView intersects position (x,y)
-            if ((x > mXPos && x < mXPos + mScaledBitmapWidth)
-                    && (y > mYPos && y < mYPos + mScaledBitmapWidth)) {
-                return true;
-            } else {
-                return false;
-            }
-
+            return ((x > mXPos && x < mXPos + mScaledBitmapWidth)
+                    && (y > mYPos && y < mYPos + mScaledBitmapWidth));
         }
 
         // Cancel the Bubble's movement
@@ -376,7 +369,7 @@ public class BubbleActivity extends Activity {
                     // play the popping sound
                     if (wasPopped) {
                         Log.d(TAG, "Play the popping sound.");
-                        mSoundPool.play(mSoundID, 0.5f, 0.5f, 0, 0, 1.0f);
+                        mSoundPool.play(mSoundID, mStreamVolume, mStreamVolume, 0, 0, 1.0f);
                     }
                 }
             });
@@ -420,12 +413,7 @@ public class BubbleActivity extends Activity {
             mXPos += mDx;
             mYPos += mDy;
 
-            Log.d(TAG, "isOutOfView() = " + isOutOfView());
-            if (isOutOfView()) {
-                return false;
-            } else {
-                return true;
-            }
+            return !isOutOfView();
         }
 
         // Return true if the BubbleView is off the screen after the move
@@ -438,24 +426,11 @@ public class BubbleActivity extends Activity {
                     + ", mScaledBitmapWidth = " + mScaledBitmapWidth
                     + ", mDisplayHeight = " + mDisplayHeight
                     + ", mDisplayWidth = " + mDisplayWidth);
-            /*
 
-             return true;
-             */
-            /*
-            if( mXPos > mDisplayWidth || 			// check the right edge
-                    mXPos + mScaledBitmapWidth < 0 ||	// check the left edge
-                    mYPos > mDisplayHeight ||			//   "    "  bottom edge
-                    mYPos + mScaledBitmapWidth < 0		//   "    "  top edge
-                    )*/
-            if (mXPos < 0 - mScaledBitmapWidth
+            return (mXPos < 0 - mScaledBitmapWidth
                     || mXPos > mDisplayWidth + mScaledBitmapWidth
                     || mYPos < 0 - mScaledBitmapWidth
-                    || mYPos > mDisplayHeight + mScaledBitmapWidth) {
-                return true;
-            } else {
-                return false;
-            }
+                    || mYPos > mDisplayHeight + mScaledBitmapWidth);
         }
     }
 
