@@ -91,7 +91,6 @@ public class DownloaderTaskFragment extends Fragment {
 	// out). Ultimately, it must also pass newly available data back to
 	// the hosting Activity using the DownloadFinishedListener interface.
 
-	// public class DownloaderTask extends ...
 	public class DownloaderTask extends AsyncTask<Integer, Integer, String[]> {
 		public DownloadFinishedListener delegate = null;
 		@Override
@@ -160,7 +159,6 @@ public class DownloaderTaskFragment extends Fragment {
 		notify(downLoadCompleted);
 
 		return feeds;
-
 	}
 
 	// Uncomment this helper method.
